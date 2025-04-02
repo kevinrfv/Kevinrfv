@@ -1,0 +1,161 @@
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { format } from 'date-fns';
+
+const frasesEstoicas = [
+  "No nos afecta lo que nos sucede, sino lo que nos decimos sobre lo que nos sucede. – Epicteto",
+  "La felicidad de tu vida depende de la calidad de tus pensamientos. – Marco Aurelio",
+  "Lo que no depende de ti, déjalo ir. – Epicteto",
+  "Sé tolerante con los demás y estricto contigo mismo. – Marco Aurelio"
+];
+
+const recetasDiarias = [
+  {
+    nombre: "Ensalada de pollo y aguacate",
+    ingredientes: ["Pechuga de pollo", "Aguacate", "Lechuga", "Tomate", "Aceite de oliva"]
+  },
+  {
+    nombre: "Tortilla de espinacas",
+    ingredientes: ["Huevos", "Espinacas", "Queso", "Cebolla"]
+  },
+  {
+    nombre: "Arroz integral con verduras",
+    ingredientes: ["Arroz integral", "Pimiento", "Calabacín", "Zanahoria"]
+  }
+];
+
+const listaComprasInicial = ["Huevos", "Leche", "Pollo", "Arroz", "Verduras"];
+
+export default function App() {
+  const [fecha] = useState(format(new Date(), 'dd/MM/yyyy'));
+  const [frase, setFrase] = useState("");
+  const [receta, setReceta] = useState(null);
+  const [foto, setFoto] = useState(null);
+  const [tareas, setTareas] = useState({
+    salud: "",
+    finanzas: "",
+    productividad: "",
+    vida: ""
+  });
+  const [listaCompras, setListaCompras] = useState(listaComprasInicial);
+  const [modoBlancoNegro, setModoBlancoNegro] = useState(false);
+  const [notaDiaria, setNotaDiaria] = useState("");
+  const [bloquesHorario, setBloquesHorario] = useState([
+    { hora: "08:00", actividad: "" },
+    { hora: "10:00", actividad: "" },
+    { hora: "12:00", actividad: "" },
+    { hora: "14:00", actividad: "" },
+    { hora: "16:00", actividad: "" },
+    { hora: "18:00", actividad: "" },
+    { hora: "20:00", actividad: "" }
+  ]);
+
+  useEffect(() => {
+    const fraseAleatoria = frasesEstoicas[Math.floor(Math.random() * frasesEstoicas.length)];
+    const recetaAleatoria = recetasDiarias[Math.floor(Math.random() * recetasDiarias.length)];
+    setFrase(fraseAleatoria);
+    setReceta(recetaAleatoria);
+  }, []);
+
+  const handleTareaChange = (key, value) => {
+    setTareas(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleFotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setFoto(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const toggleBlancoNegro = () => {
+    setModoBlancoNegro(!modoBlancoNegro);
+  };
+
+  const estiloApp = modoBlancoNegro ? "bg-white text-black filter grayscale" : "";
+
+  const handleBloqueChange = (index, value) => {
+    const nuevosBloques = [...bloquesHorario];
+    nuevosBloques[index].actividad = value;
+    setBloquesHorario(nuevosBloques);
+  };
+
+  return (
+    <div className={`p-4 grid gap-4 min-h-screen ${estiloApp}`}>
+      <h1 className="text-xl font-bold">🗓️ Agenda diaria - {fecha}</h1>
+
+      <Button onClick={toggleBlancoNegro} className="w-fit">{modoBlancoNegro ? '🌈 Modo color' : '⚫ Modo blanco y negro'}</Button>
+
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="text-lg font-semibold">✨ Frase estoica del día</h2>
+          <p className="italic mt-2">{frase}</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="text-lg font-semibold">📷 Subir una foto del día</h2>
+          <Input type="file" accept="image/*" onChange={handleFotoUpload} />
+          {foto && <img src={foto} alt="Foto del día" className="mt-4 rounded-xl w-full max-w-xs" />}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="text-lg font-semibold">✅ Tareas por bloque</h2>
+          {Object.entries(tareas).map(([key, value]) => (
+            <div key={key} className="my-2">
+              <label className="capitalize">{key}</label>
+              <Textarea value={value} onChange={(e) => handleTareaChange(key, e.target.value)} placeholder={`Escribe tus tareas de ${key}`} />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {receta && (
+        <Card>
+          <CardContent className="p-4">
+            <h2 className="text-lg font-semibold">🍽️ Receta del día: {receta.nombre}</h2>
+            <ul className="list-disc list-inside mt-2">
+              {receta.ingredientes.map((ing, i) => <li key={i}>{ing}</li>)}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="text-lg font-semibold">🛒 Lista de compras semanal</h2>
+          <ul className="list-disc list-inside mt-2">
+            {listaCompras.map((item, i) => <li key={i}>{item}</li>)}
+          </ul>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="text-lg font-semibold">🕒 Planificador horario</h2>
+          {bloquesHorario.map((bloque, i) => (
+            <div key={i} className="flex gap-2 items-center mb-2">
+              <span className="w-16 font-medium">{bloque.hora}</span>
+              <Input value={bloque.actividad} onChange={(e) => handleBloqueChange(i, e.target.value)} placeholder="Actividad..." />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="text-lg font-semibold">📝 Nota o reflexión diaria</h2>
+          <Textarea value={notaDiaria} onChange={(e) => setNotaDiaria(e.target.value)} placeholder="Escribe tu reflexión del día..." />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
